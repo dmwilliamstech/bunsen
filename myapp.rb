@@ -57,9 +57,19 @@ helpers do
   end#end pdf creation
   end #end if arr
 end #end method
+
 def create_json arr
   separator = '\n'
   out_file = File.open("vul.json", "w") do |f|
+    arr.each {|result|
+    f.write(result)
+    f.write(separator)
+  }
+  end
+end
+def create_html arr
+  separator = '\n'
+  out_file = File.open("vul.html", "w") do |f|
     arr.each {|result|
     f.write(result)
     f.write(separator)
@@ -70,13 +80,6 @@ end
     BSON::ObjectId.from_string(val)
   end#end ob_id
 
-  def document_by_id id
-    id = ob_id(id) if String === id
-    settings.mongo_db['mostRecent'].
-      find_one(:id => id).to_json
-  end#end if
-end#end document_by_id
-  
   def document_by_v_id id
     if String === id
     settings.mongo_db['mostRecent'].
@@ -92,21 +95,14 @@ end#end document_by_v_id
       redirect back
     end
 end
-  
-  def search_by_exact textString
-    if String === textString
-      settings.mongo_db['mostRecent'].ensure_index({"$**" => Mongo::TEXT})
-      settings.mongo_db.command({:text => 'mostRecent',  :search => textString })
-     
-  end
-end
+
  module GetOrPost
   def get_or_post(path, options = {}, &block)
   get(path, options, &block)
   post(path, options, &block)
   end
 end
-
+end
 register GetOrPost
 
 
@@ -132,7 +128,7 @@ end
 get '/search/' do
   erb :search
 end
-post '/search/results/' do
+get_or_post '/search/results/' do
   @results =search_any(params[:q])['results'].each { |result|
     puts 'Search Away'}
   erb :search
@@ -148,9 +144,6 @@ get_or_post '/search/results/asPdf' do
   create_pdf(@results)
   puts "pdf created"
 end
-
-
-
 
 
 

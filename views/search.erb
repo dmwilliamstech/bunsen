@@ -15,14 +15,14 @@
 </head>
 <body>
 <h2>Search Vulnerabilities</h2>
-<form method="post" action="/search/results">
-         <input name="q" value="<%= params[:q]%>" size="30"> <input value="search" type="submit">
+<form method="post" action="/search/results/" >
+         <input name="q" value="<%= params[:q]%>" input type="text" size="30"> <input value="search" type="submit">
 </form>
 
 <div id='results'>
 <ol>
-	
-<%@results.each {|result| %>
+	<% if not @results.nil? %>
+<%@results.each {|result|  %>
 <table>
 	<tr>
 		<th>ID: </th>
@@ -31,12 +31,18 @@
 				<th>Summary</th>
 	</tr>
 <td><%= result['obj']['id'] %></td>
+<% if result['obj']['vulnerable_software_list'] %>
 <td><%= result['obj']['vulnerable_software_list']['product'] %></td>
+<% else %>
+<td>No software list provided</td>
+<% end %>
 <td><%= result['obj']['published_datetime'] %></td>
 <td><%= result['obj']['summary'] %></td>
 <li><a href="/vulnerabilities/<%= result['obj']['id']%>">
 	Explore this Vulnerability</a></li>	
 	<% } unless @results.nil? %>
+	
+	<% end %>
 </ol>
 </div>
 </body>
