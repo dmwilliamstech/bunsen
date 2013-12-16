@@ -16,7 +16,7 @@ Current curl instructions
 
 If there is space between params it is passed to the db as an "AND"
 
-Files will be saved in <query>.<output format>
+Files will be saved in query.output-format
 
 videolan media.pdf or videolan media.json in the hensonScap/lib (for now)
 
