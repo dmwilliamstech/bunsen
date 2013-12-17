@@ -7,14 +7,23 @@ require 'test/unit'
 require 'rack/test'
 require 'rspec'
 require 'json'
-require File.join(File.dirname(__FILE__), '../lib', 'app')
-require File.join(File.dirname(__FILE__), '../bin', 'rubynist')
+
+require File.expand_path '../../lib/app.rb', __FILE__
+
+module RSpecMixin
+  include Rack::Test::Methods
+  def app 
+    NistApp 
+  end
+end
 
 RSpec.configure do |config|
 
+  config.include RSpecMixin
+  
   config.before(:each) do
     @db = Mongo::Connection.new("localhost", 27017).db("vulnerabilities")
-    Mongo::DB.stub!(:new).and_return { @db }
+    Mongo::DB.stub(:new).and_return { @db }
   end
 
   config.after(:each) do
