@@ -1,13 +1,11 @@
-source :rubygems
+source 'https://rubygems.org'
 
-gem 'net-http'
 gem 'sinatra'
 gem 'bson_ext'
 gem 'rspec'
-gem 'active_support-core_ext'
+gem 'activesupport', "~> 4.0.2"
 gem 'mongo'
-gem 'date'
-gem 'json-ext'
+gem 'json'
 gem 'sinatra-base'
 gem 'nokogiri'
 gem 'rest-client'
