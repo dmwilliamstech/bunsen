@@ -1,3 +1,5 @@
+require File.dirname(__FILE__) + '/myapp.rb'
+
 RSpec.configure do |config|
 
 config.before(:each) do

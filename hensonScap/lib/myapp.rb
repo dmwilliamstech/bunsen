@@ -3,7 +3,7 @@ require 'sinatra'
 require 'mongo'
 require 'active_support/core_ext'
 require "sinatra/base"
-require './output'
+require_relative './output'
 
 include Mongo
 
@@ -27,10 +27,10 @@ helpers do
 
   def document_by_v_id id
     if String === id
-    settings.mongo_db['mostRecent'].
+      settings.mongo_db['mostRecent'].
       find_one(:id => id)
-  end#end if
-end#end document_by_v_id
+    end#end if
+  end#end document_by_v_id
 
   def search_any textInput
     if String === textInput
@@ -39,14 +39,14 @@ end#end document_by_v_id
     else
       redirect back
     end
-end
-
- module GetOrPost
-  def get_or_post(path, options = {}, &block)
-  get(path, options, &block)
-  post(path, options, &block)
   end
-end
+
+  module GetOrPost
+    def get_or_post(path, options = {}, &block)
+      get(path, options, &block)
+      post(path, options, &block)
+    end
+  end
 end
 register GetOrPost
 
@@ -76,15 +76,15 @@ end
 get_or_post '/search/results/' do
   @results =search_any(params[:q])['results'].each { |result|
     puts 'Search Away'}
-  erb :search
-end
+    erb :search
+  end
 
-get_or_post '/search/results/:outPut' do
-  @results =search_any(params[:q])
-  newOut = OutPut.new
-  desOut = newOut.out_put_format(params[:outPut].downcase, @results, params[:q])
+  get_or_post '/search/results/:outPut' do
+    @results =search_any(params[:q])
+    newOut = OutPut.new
+    desOut = newOut.out_put_format(params[:outPut].downcase, @results, params[:q])
 
-end
+  end
 
 
 

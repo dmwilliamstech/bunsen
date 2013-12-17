@@ -1,12 +1,13 @@
-require "../myapp"
 require 'net/http'
 require 'mongo'
 require 'active_support/core_ext'
 require 'nokogiri'
 require 'restclient'
-include Mongo
 require 'test/unit'
 require 'rack/test'
+require_relative File.join(File.dirname(__FILE__), '../lib', 'myapp')
+
+include Mongo
 
 class MyAppTest < Test::Unit::TestCase
   include Rack::Test::Methods
@@ -46,7 +47,7 @@ describe "My Sinatra Application" do
       connection = MongoClient.new("localhost")
       db = connection.db("vulnerabilities")
       coll = db["mostRecent"]
-      coll.find_one(:id => "CVE-2013-5776").to_json.should == Net::HTTP.get_response(URI.parse('http://localhost:4567/vulnerabilities/CVE-2013-5776')).body
+      coll.find_one(:id => "CVE-2013-7009").to_json.should == Net::HTTP.get_response(URI.parse('http://localhost:4567/vulnerabilities/CVE-2013-7009')).body
       
     end
   end
@@ -59,45 +60,46 @@ describe "My Sinatra Application" do
       coll = db["mostRecent"]
       coll.ensure_index({"$**" => Mongo::TEXT})
       db.command({:text => 'mostRecent' , :search => "\\" + textInput.split(' ').to_s + "\\"}).count().should >= 1
+    end
   end
-end
-describe "return all db docs" do
-  connection = MongoClient.new("localhost")
-  db = connection.db("vulnerabilities")
-  coll = db["mostRecent"]
-  coll.find().to_json.should == Net::HTTP.get_response(URI.parse('http://localhost:4567/vulnerabilities/')).body
-end
-describe "when no params" do
-
-  it "pdf generation" do
-    request = Net::HTTP.get_response(URI.parse('http://localhost:4567/search/results/asPdf'))
-    request.code.should == "302"
-  end
-  it "json generation" do
-    request = Net::HTTP.get_response(URI.parse('http://localhost:4567/search/results/asJson'))
-    request.code.should == "302"
-  end
-end
-describe "no docs found" do
-  it "no results in dc" do
-    textInput = "peekaboo"
+  describe "return all db docs" do
     connection = MongoClient.new("localhost")
     db = connection.db("vulnerabilities")
     coll = db["mostRecent"]
-    coll.ensure_index({"$**" => Mongo::TEXT})
-    db.command({:text => 'mostRecent' , :search => "\\" + textInput.split(' ').to_s + "\\"}).count().should == 0
+    coll.find().to_json.should == Net::HTTP.get_response(URI.parse('http://localhost:4567/vulnerabilities/')).body
   end
-  it "not results from search url" do
-    link = 'http://localhost:4567/search/results/?q=peekaboo'
-    page = Nokogiri::HTML(RestClient.get(link))
-    page.css('div#results table tr th').each do |el|
-      if not el.text
-        el.text.should == 0
-      else
-        el.text != 0
-      end
+  describe "when no params" do
+
+    it "pdf generation" do
+      request = Net::HTTP.get_response(URI.parse('http://localhost:4567/search/results/pdf'))
+      request.code.should == "302"
     end
-    
+    it "json generation" do
+      request = Net::HTTP.get_response(URI.parse('http://localhost:4567/search/results/asJson'))
+      request.code.should == "302"
+    end
   end
-end
+  #This test fails
+  describe "no docs found" do 
+    it "no results in db" do
+      textInput = "peekaboo"
+      connection = MongoClient.new("localhost")
+      db = connection.db("vulnerabilities")
+      coll = db["mostRecent"]
+      coll.ensure_index({"$**" => Mongo::TEXT})
+      db.command({:text => 'mostRecent' , :search => "\\" + textInput.split(' ').to_s + "\\"}).count().should == 0
+    end
+    it "not results from search url" do
+      link = 'http://localhost:4567/search/results/?q=peekaboo'
+      page = Nokogiri::HTML(RestClient.get(link))
+      page.css('div#results table tr th').each do |el|
+        if not el.text
+          el.text.should == 0
+        else
+          el.text != 0
+        end
+      end
+    
+    end
+  end
 end
