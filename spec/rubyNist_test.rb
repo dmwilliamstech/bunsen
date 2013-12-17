@@ -1,16 +1,12 @@
-require 'rspec'
-require 'active_support/core_ext'
-require 'json'
-require "../rubynist"
-require 'net/http'
+require File.expand_path '../spec_helper.rb', __FILE__
 
 describe NewVuls do
   describe "grab xml" do
     context "go to nist" do
       it "if nist site is up"
-      20.times {request = Net::HTTP.get_response(URI.parse('http://nvd.nist.gov'))}
+      request = Net::HTTP.get_response(URI.parse('http://nvd.nist.gov'))
       request.code.should == "200"
-  end
+    end
 
     context "get and convert xml to json" do
       it "verify content type"
@@ -20,6 +16,7 @@ describe NewVuls do
       it "if successfully convert to json"
       JSON.pretty_generate(Hash.from_xml(request.body)["nvd"])
     end
+  end
   
 end
   

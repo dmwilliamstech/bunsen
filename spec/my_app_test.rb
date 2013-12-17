@@ -1,11 +1,4 @@
-require 'net/http'
-require 'mongo'
-require 'active_support/core_ext'
-require 'nokogiri'
-require 'restclient'
-require 'test/unit'
-require 'rack/test'
-require_relative File.join(File.dirname(__FILE__), '../lib', 'myapp')
+require File.expand_path '../spec_helper.rb', __FILE__
 
 include Mongo
 
@@ -82,7 +75,7 @@ describe "My Sinatra Application" do
   #This test fails
   describe "no docs found" do 
     it "no results in db" do
-      textInput = "peekaboo"
+      textInput = "jjddjdj"
       connection = MongoClient.new("localhost")
       db = connection.db("vulnerabilities")
       coll = db["mostRecent"]
