@@ -32,6 +32,7 @@ describe "Nist Application" do
       last_response.Content-Type.should == "application/json"
       last_response.status.Content-Disposition.should == "attachment; filename=\"vulnerabilities.json\""
     end
+  end
   
     describe "PDF functionality" do
       it "should return results as a valid PDF on the /search.pdf interface" do
