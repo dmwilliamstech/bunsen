@@ -5,7 +5,7 @@ class JsonGeneration
     separator = '\n'
     out_file = File.open( "#{params}.json", "w") do |f|
       arr.each {|result|
-        f.write(result)
+        f.write(JSON.pretty_generate(result))
         f.write(separator)
       }
     end
