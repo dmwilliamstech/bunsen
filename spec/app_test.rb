@@ -17,7 +17,6 @@ describe "Nist Application" do
     #This is just a placeholder for now.
     last_response.body.should == "Use man curl for information on curl'ing. curl -H 'Accept: application/pdf;' http://localhost:4567/search 'q=<params>' "
     last_response.status.should == 200
-
   end
   
   describe "Return all Vulnerabilities" do
@@ -25,8 +24,6 @@ describe "Nist Application" do
       get '/vulnerabilities/'
       last_response.status.should == 200
       JSON.parse(last_response.body).should == JSON.parse(File.read(disAll))
-      puts last_response
-    
     end
   end
   
@@ -78,6 +75,13 @@ describe "Nist Application" do
       last_response.body['results'].should == JSON.parse(File.read(chrome31))      
     end
     
+    it "should return search results with hyphenated params" do
+      post '/search?q="ffmpeg-0.5"'
+      last_response.status.should == 200
+      selector('#results').should_not be_nil
+      last_response.body['results'].should be_a_kind_of(Array)
+    end
+    
     it "should return results of vender name" do
       get '/search?q="microsoft"'
       last_response.status.should == 200
@@ -118,16 +122,41 @@ describe "Nist Application" do
 
   describe "Return individual Vulnerability" do
     it "should display single vulnerability" do
-      get '/vulnerabilities/<id>'
+      get '/vulnerabilities/CVE-2002-2443'
       last_response.status.should == 200
       last_response.Content-Type.should == "application/json"
       last_response.body['results'].count().should == "1"
       puts last_response
     end
-    it "should raise error when no cve-id entered" do
-      get '/vulnerabilities/'
-      last_response.should raise_error
+  end
+  describe "400 errors" do
+    it "should display page not found error if vulnerabilities spelled wrong" do
+      get '/vulnerabities/'
+      last_response.status.should == 404
+      last_response.body.should == 'page not found'
+    end
+    it "should raise error when cve-id entered doesn't exist" do
+      get '/vulnerabilities/CVE-000-0000'
+      last_response.body.should == "null"
+    end
+    it "should raise error if unaccepted content enter" do
+      get '/vulnerabilities.xml'
+      last_response.status.should == 404
+      last_response.body.should == "Unexpected content. Please use one of the following formats: pdf or json"
+    end
+    it "should raise error if unaccepted character entered" do
+      get '/search?q="linux OR 1=1,---"'
+      last_response.status.should == 422
+      last_response.body.should == "Unaccepted character entered. Please enter valid characters."
     end
   end
-
+  describe "No docs found" do
+    it "should alert user no results found" do
+      get '/search?q="AirGapIT"'
+      last_response.status.should == 200
+      last_response.body['results'].count().should == "0"
+      last_response.body.include?('No Results Found')
+    end
+    it "should alert"
+  end
 end
