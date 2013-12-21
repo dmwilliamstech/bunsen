@@ -1,3 +1,6 @@
+=begin
+Yet to comment but will
+=end
 require 'date'
 require 'prawn'
 
@@ -13,14 +16,12 @@ class PdfGeneration
         pdf.text "See next page", :size => 10
         pdf.move_down 10
         vuls = [["# Of Vuls","CVE-ID", "Summary", "Vulnerable Software"]]
-        vuls += arr['results'].each_with_index.map do |result, i|
+        vuls += arr.each_with_index.map do |result, i|
           if result['obj']['vulnerable_software_list']
             vsl = result['obj']['vulnerable_software_list']['product']
           else
             vsl = "No software given"
           end#end if
-
- 
           [
             i + 1,
             result['obj']['id'],

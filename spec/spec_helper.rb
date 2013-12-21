@@ -2,11 +2,14 @@ require 'net/http'
 require 'mongo'
 require 'active_support/core_ext'
 require 'nokogiri'
+require 'sinatra'
+require 'sinatra/contrib'
 require 'restclient'
 require 'test/unit'
 require 'rack/test'
 require 'rspec'
 require 'json'
+require 'json/ext'
 
 require File.expand_path '../../lib/app.rb', __FILE__
 
@@ -30,6 +33,7 @@ RSpec.configure do |config|
     Mongo::DB.stub(:new).and_return { @db }
   end
 
+  #Commented out because it drops collection after test finished
   #config.after(:each) do
   #  @db.collections.each do |coll|
   #   coll.drop unless coll.name =~ /^system\./

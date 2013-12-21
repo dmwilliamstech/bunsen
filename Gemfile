@@ -7,6 +7,7 @@ gem 'activesupport', "~> 4.0.2"
 gem 'mongo'
 gem 'json'
 gem 'sinatra-base'
+gem 'sinatra-contrib'
 gem 'nokogiri'
 gem 'rest-client'
 gem 'test-unit'
