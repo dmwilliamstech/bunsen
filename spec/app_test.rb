@@ -1,6 +1,7 @@
 require File.expand_path '../spec_helper.rb', __FILE__
 
 disAll = File.join(File.dirname(__FILE__), 'spec_files', 'displayAll.json')
+search = File.join(File.dirname(__FILE__), 'spec_files', 'search.html')
 
 
 describe "Nist Application" do
@@ -14,35 +15,43 @@ describe "Nist Application" do
   
   describe "Json functionality" do
     it "should return search results as JSON on the /search.json interface" do
-      post '/search/?q=CVE-2013-6956'
+      get '/search.json?q=google'
       last_response.status.should == 200
-      last_response.headers['Content-Type'].should == "application/json"
+      last_response.headers['Content-Type'].should == "application/json;charset=utf-8"
       last_response.body.include?('google')
     end
   end
   
   describe "PDF functionality" do
     it "should return results as a valid PDF on the /search.pdf interface" do
-      post '/search/?q=google'
+      get '/search.pdf?q=google'
       last_response.status.should == 200
       last_response.headers['Content-Type'].should == "application/pdf"
-      last_response.headers.content_disposition.should == "attachment; filename=\"<q>.pdf\""
+      #last_response.headers.content_disposition.should == "attachment; filename=\"<q>.pdf\""
     end
+    
     it "should return all vulnerabilities as PDF on the /vulnerabilties.pdf interface" do
       get '/vulnerabilities.pdf'
       last_response.status.should == 200
       last_response.headers['Content-Type'].should == "application/pdf"
-      last_response.status.content_disposition.should == "attachment; filename=\"allVulnerabilities.pdf\""
+      #last_response.status.content_disposition.should == "attachment; filename=\"allVulnerabilities.pdf\""
     end
   end
+  
   describe "Return all Vulnerabilities" do
     it "should display all vulnerabilities" do
-      get '/vulnerabilities/'
+      get '/vulnerabilities'
       last_response.status.should == 200
       last_response.body.should == File.read(disAll)
     end
-    it "should return all vulnerabilities as JSON on the /vulnerabilties.json interface" do
+    
+    it "should redirect to /vulnerabilties if /vulnerabilties/ entered" do
       get '/vulnerabilities/'
+      last_response.status.should == 302
+    end
+  
+    it "should return all vulnerabilities as JSON on the /vulnerabilties.json interface" do
+      get '/vulnerabilities.json'
       last_response.status.should == 200
       #last_response.Content-Type.should == "application/json"
       last_response.body.include?('CVE-2013-3907')
@@ -51,51 +60,54 @@ describe "Nist Application" do
 
   describe "Search Params" do
     it "should return results of software name search query" do
-      post '/search/?q=cybozu'
+      get '/search?q=cybozu'
       last_response.status.should == 200
       last_response.body.include?('cybozu')
     end
     
-  #This spec verifies that the body includes the params chrome and 31.
+    #This spec verifies that the body includes the params chrome and 31.
     it "should return results of software and version" do
-      post '/search/?q=chrome+31'
+      get '/search?q=chrome+31'
       last_response.status.should == 200
       last_response.body.include?('chrome')
       last_response.body.include?('31')      
     end
     
     it "should return search results with hyphenated params" do
-      post '/search/?q=ffmpeg-0.5'
+      get '/search?q=ffmpeg-0.5'
       last_response.status.should == 200
     end
     
     it "should return results of vender name" do
-      post '/search/?q=microsoft'
+      get '/search?q=microsoft'
       last_response.status.should == 200
       last_response.body.include?('microsoft')      
     end
     
     it "should return results of query of words in summary" do
-      post '/search/?q=phishing+browser'
+      get '/search?q=phishing+browser'
       last_response.status.should == 200
       last_response.body.include?('phishing browser')
     end
     
     it "should return results of query for 5 words" do
-      post '/search/?q=gain+privileges+via+unspecified+vectors'
+      get '/search?q=gain+privileges+via+unspecified+vectors'
       last_response.status.should == 200
       last_response.body.include?('gain privileges via unspecified vectos')
     end
-    #Troubleshooting /search/?q= renders search form
+    #Is this spec valid? If no params entered it just goes to the search form. 
+    #It noticed google, bing, yahoo if no search params entered it just redirects back to the search form
+    #Maybe should test that it doesn't error out and webform rendered
     it "should raise error and alert user when no params entered" do
-      get '/search/?q='
-      last_response.body.should == ""
+      get '/search?q='
+      last_response.status.should == 200
+      last_response.body.should == File.read(search)
     end
   end
   
   describe "Limit results" do
     it "should return results limited to 10" do
-      get '/search/?q=linux'
+      get '/search?q=linux'
       last_response.status.should == 200
       #last_response.body['results'].count.should == 10      
     end
@@ -103,35 +115,40 @@ describe "Nist Application" do
 
   describe "Return individual Vulnerability" do
     it "should display single vulnerability" do
-      get '/vulnerabilities/CVE-2002-2443'
+      get '/cve/CVE-2002-2443'
       last_response.status.should == 200
       #last_response.body['results'].count().should == 1
     end
   end
+  
   describe "400 errors" do
     it "should display page not found error if path spelled wrong" do
       get '/vulnerabities/'
       last_response.status.should == 404
       last_response.body.should == 'page not found'
     end
+    
     it "should raise error when cve-id entered doesn't exist" do
-      get '/vulnerabilities/CVE-000-0000'
-      last_response.body.should == "[\n\n]"
+      get '/cve/CVE-000-0000'
+      last_response.body.should == "[]"
     end
+    
     it "should raise error if unaccepted content enter" do
       get '/vulnerabilities.xml'
       last_response.status.should == 404
       last_response.body.should == "page not found"
     end
+    
     it "should raise error if unaccepted character entered" do
-      get '/search/?q=linux+OR+1=1,---'
+      get '/search?q=linux+OR+1=1,---'
       last_response.status.should == 200
       last_response.body.should == "Unaccepted character entered. Please enter valid characters."
     end
   end
+  
   describe "No docs found" do
     it "should alert user no results found" do
-      get '/search/?q=AirGapIT'
+      get '/search?q=AirGapIT'
       last_response.status.should == 200
       last_response.body.include?('No Results Found')
     end

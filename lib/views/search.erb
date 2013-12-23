@@ -15,7 +15,7 @@
 </head>
 <body>
 <h2>Search Vulnerabilities</h2>
-<form method="post" action="/search/" >
+<form method="post" action="/search?q=<%= params[:q]%>" >
          <input name="q" value="<%= params[:q]%>" input type="text" size="30"> <input value="search" type="submit">
 </form>
 
