@@ -9,7 +9,7 @@ describe "Nist Application" do
   it "should respond to GET /" do
     get '/'
     #This is just a placeholder for now.
-    last_response.body.should == "Use man curl for information on curl'ing. curl -H Accept: application/pdf http://localhost:4567/search/?q=params"
+    last_response.body.should == "Use man curl for information on curl'ing. curl -H Accept: application/pdf http://localhost:4567/search?q=params"
     last_response.status.should == 200
   end
   
@@ -101,7 +101,7 @@ describe "Nist Application" do
     it "should raise error and alert user when no params entered" do
       get '/search?q='
       last_response.status.should == 200
-      last_response.body.should == File.read(search)
+      last_response.body.include? File.read(search)
     end
   end
   

@@ -121,52 +121,50 @@ class NistApp < Sinatra::Base
     end
   end
 
-  # Renders search form
-  get '/search' do
-    erb :search
-  end
   
   #Renders results from search form. Has to be handled seperately, else it wont render form(troubleshooting)
   #Responds to web int or curl with requested format (text/html default)
   get_or_post '/search.?:format?:q?:limit?' do
-
-    #Response from the web int
-    if params[:format].nil?
-      if params[:limit].nil?
-        @results = search_any(CGI.unescape(params[:q]))['results'].each
-      else
-        @results = search_any(CGI.unescape(params[:q]), params[:limit])['results'].each
-      end
-    elsif params[:format] == 'pdf'
-      content_type 'application/pdf'
-      @results = search_any(params[:q])['results'].each
-      #@return = @results.each unless @results.nil?
-      result = @results.each #"Same Mongo error"
-      @retPdf = result
-      pdf = Prawn::Document.new
-      pdf.text "Example Text" #@retPdf
-      pdf.render      
-    elsif  params[:format] == 'json'
-      content_type :json
-      return @results.to_json
-    else
-      "Unaccepted format. Please use .json or .pdf"
-    end
-    #response from -Header "application/<whatever content-type>"
-    respond_to do |f|
-      f.on('text/html'){
-        erb :search 
-      }
-      f.on('application/pdf'){ 
-        newPdf = PdfGeneration.new
-        pdf = newPdf.create_pdf(@results, params[:q]) 
-        return pdf
-      }
-      f.on('application/json') {
+    if params[:q]
+      #Response from the web int
+      if params[:format].nil?
+        if params[:limit].nil?
+          @results = search_any(CGI.unescape(params[:q]))['results'].each
+        else
+          @results = search_any(CGI.unescape(params[:q]), params[:limit])['results'].each
+        end
+      elsif params[:format] == 'pdf'
+        content_type 'application/pdf'
         @results = search_any(params[:q])['results'].each
-        return @results.each.to_json
+        #@return = @results.each unless @results.nil?
+        @retPdf = @results.each #"Same Mongo error"
+        pdf = Prawn::Document.new
+        pdf.text "Example Text" #@retPdf
+        pdf.render      
+      elsif  params[:format] == 'json'
+        content_type :json
+        return @results.to_json
+      else
+        "Unaccepted format. Please use .json or .pdf"
+      end
+      #response from -Header "application/<whatever content-type>"
+      respond_to do |f|
+        f.on('text/html'){
+          erb :search 
+        }
+        f.on('application/pdf'){ 
+          newPdf = PdfGeneration.new
+          pdf = newPdf.create_pdf(@results, params[:q]) 
+          return pdf
+        }
+        f.on('application/json') {
+          @results = search_any(params[:q])['results'].each
+          return @results.each.to_json
 
-      }
+        }
+      end
+    else
+      erb :search
     end
   end
   
