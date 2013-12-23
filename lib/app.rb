@@ -73,9 +73,9 @@ class NistApp < Sinatra::Base
   #Displays all Vuls (with optional params for format) 
   get '/vulnerabilities.?:format?' do
     if params[:format].nil?
-    settings.mongo_db['mostRecent'].find.to_json
-  elsif params[:format] == 'pdf' 
-    content_type 'application/pdf'
+      settings.mongo_db['mostRecent'].find.to_json
+    elsif params[:format] == 'pdf' 
+      content_type 'application/pdf'
       pdf = Prawn::Document.new
       #pdf.text settings.mongo_db['mostRecent'].find.to_json 
       #Receiving timeout mongo error only on pdf generation
@@ -97,28 +97,28 @@ class NistApp < Sinatra::Base
   # find a document by its ID, converts array to json and displays in web interface
   get '/cve/:id.?:format?' do
     if params[:id]
-    if params[:format].nil?
-          content_type :json
-          document_by_v_id(params[:id]).to_a.to_json
+      if params[:format].nil?
+        content_type :json
+        document_by_v_id(params[:id]).to_a.to_json
           
-        elsif params[:format] == 'pdf' 
-          content_type 'application/pdf'
-            pdf = Prawn::Document.new
-            #pdf.text settings.mongo_db['mostRecent'].find.to_json 
-            #Receiving timeout mongo error only on pdf generation
-            pdf.text document_by_v_id(params[:id]).to_a.to_json
-            pdf.render()
-          elsif params[:format] == 'json' 
-            content_type :json
-            return settings.mongo_db['mostRecent'].find.to_json
-          else
-            "Unaccepted format. Please use .json or .pdf"
-          end
-          else
-            "No params entered" #or unaccepted format. Please use .json or .pdf"
-          end
-
+      elsif params[:format] == 'pdf' 
+        content_type 'application/pdf'
+        pdf = Prawn::Document.new
+        #pdf.text settings.mongo_db['mostRecent'].find.to_json 
+        #Receiving timeout mongo error only on pdf generation
+        pdf.text document_by_v_id(params[:id]).to_a.to_json
+        pdf.render()
+      elsif params[:format] == 'json' 
+        content_type :json
+        return settings.mongo_db['mostRecent'].find.to_json
+      else
+        "Unaccepted format. Please use .json or .pdf"
       end
+    else
+      "No params entered" #or unaccepted format. Please use .json or .pdf"
+    end
+
+  end
 
   # Renders search form
   get '/search' do
@@ -129,34 +129,34 @@ class NistApp < Sinatra::Base
   #Responds to web int or curl with requested format (text/html default)
   get_or_post '/search.?:format?:q?' do
 
-      #Response from the web int
-      if params[:format].nil?
+    #Response from the web int
+    if params[:format].nil?
       @results = search_any(params[:q])['results'].each
     elsif params[:format] == 'pdf'
-        content_type 'application/pdf'
-        @return = @results.each unless @results.nil?
-        pdf = Prawn::Document.new
-        pdf.text "Same Mongo error"
-        pdf.render      
-      elsif  params[:format] == 'json'
-        content_type :json
-        return @results.to_json
-      else
-        "Unaccepted format. Please use .json or .pdf"
-      end
-      #response from -Header "application/<whatever content-type>"
-      respond_to do |f|
-        f.on('text/html'){
-          erb :search 
-        }
-        f.on('application/pdf'){ 
-          newPdf = PdfGeneration.new
-          pdf = newPdf.create_pdf(@results, params[:q]) 
-          return pdf
-        }
-        f.on('application/json') {
-          return @results.each.to_json
-        }
+      content_type 'application/pdf'
+      @return = @results.each unless @results.nil?
+      pdf = Prawn::Document.new
+      pdf.text "Same Mongo error"
+      pdf.render      
+    elsif  params[:format] == 'json'
+      content_type :json
+      return @results.to_json
+    else
+      "Unaccepted format. Please use .json or .pdf"
+    end
+    #response from -Header "application/<whatever content-type>"
+    respond_to do |f|
+      f.on('text/html'){
+        erb :search 
+      }
+      f.on('application/pdf'){ 
+        newPdf = PdfGeneration.new
+        pdf = newPdf.create_pdf(@results, params[:q]) 
+        return pdf
+      }
+      f.on('application/json') {
+        return @results.each.to_json
+      }
     end
   end
   
