@@ -38,8 +38,8 @@
 <% end %>
 <td><%= result['obj']['published_datetime'] %></td>
 <td><%= result['obj']['summary'] %></td>
-<li><a href="/vulnerabilities/<%= result['obj']['id']%>">
-	Explore this Vulnerability</a></li>	
+<li><a href="/cve/<%= result['obj']['id']%>">
+	Explore this CVE</a></li>	
 	<% } unless @results.nil? %>
 	
 	<% end %>
