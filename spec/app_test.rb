@@ -107,7 +107,7 @@ describe "Nist Application" do
   
   describe "Limit results" do
     it "should return results limited to 10" do
-      get '/search?q=linux'
+      get '/search?q=linux?limit=10'
       last_response.status.should == 200
       #last_response.body['results'].count.should == 10      
     end

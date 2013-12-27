@@ -1,4 +1,6 @@
-require 'myapp'
+require './lib/app'
+require 'pdfkit'
 
-
-run Sinatra::Application
+use PDFKit::Middleware
+#run Sinatra::Application
+run NistApp

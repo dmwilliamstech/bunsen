@@ -5,6 +5,8 @@ gem 'sinatra'
 gem 'bson_ext'
 gem 'rspec'
 gem 'activesupport', "~> 4.0.2"
+gem 'pdfkit'
+gem 'wkhtmltopdf-binary'
 gem 'mongo'
 gem 'json'
 gem 'sinatra-base'
