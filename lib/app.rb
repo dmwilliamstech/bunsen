@@ -71,22 +71,8 @@ class NistApp < Sinatra::Base
   end
 
   #Displays all Vuls (with optional params for format) 
-  get '/vulnerabilities.?:format?' do
-    if params[:format].nil?
+  get '/vulnerabilities' do
       settings.mongo_db['mostRecent'].find.to_json
-    elsif params[:format] == 'pdf' 
-      content_type 'application/pdf'
-      pdf = Prawn::Document.new
-      #pdf.text settings.mongo_db['mostRecent'].find.to_json 
-      #Receiving timeout mongo error only on pdf generation
-      pdf.text "Timeout error with Mongo only on this"
-      pdf.render()
-    elsif params[:format] == 'json' 
-      content_type :json
-      return settings.mongo_db['mostRecent'].find.to_json
-    else
-      "Unaccepted format. Please use .json or .pdf"
-    end
   end
   
   
@@ -97,56 +83,24 @@ class NistApp < Sinatra::Base
   # find a document by its ID, converts array to json and displays in web interface
   get '/cve/:id.?:format?' do
     if params[:id]
-      if params[:format].nil?
-        content_type :json
         document_by_v_id(params[:id]).to_a.to_json
-          
-      elsif params[:format] == 'pdf' 
-        content_type 'application/pdf'
-        pdf = Prawn::Document.new
-        #pdf.text settings.mongo_db['mostRecent'].find.to_json 
-        #Receiving timeout mongo error only on pdf generation
-        pdf.text document_by_v_id(params[:id]).to_a.to_json
-        pdf.render()
-        
-      elsif params[:format] == 'json' 
-        content_type :json
-        return settings.mongo_db['mostRecent'].find.to_json
-      else
-        "Unaccepted format. Please use .json or .pdf"
-      end
-      
     else
-      "No params entered" #or unaccepted format. Please use .json or .pdf"
+      "No CVE entered" #or unaccepted format. Please use .json or .pdf"
     end
   end
 
   
   #Renders results from search form. Has to be handled seperately, else it wont render form(troubleshooting)
   #Responds to web int or curl with requested format (text/html default)
-  get_or_post '/search.?:format?:q?:limit?' do
+  get_or_post '/search:q?:limit?' do
     if params[:q]
       #Response from the web int
-      if params[:format].nil?
         if params[:limit].nil?
           @results = search_any(CGI.unescape(params[:q]))['results'].each
         else
           @results = search_any(CGI.unescape(params[:q]), params[:limit])['results'].each
         end
-      elsif params[:format] == 'pdf'
-        content_type 'application/pdf'
-        @results = search_any(params[:q])['results'].each
-        #@return = @results.each unless @results.nil?
-        @retPdf = @results.each #"Same Mongo error"
-        pdf = Prawn::Document.new
-        pdf.text "Example Text" #@retPdf
-        pdf.render      
-      elsif  params[:format] == 'json'
-        content_type :json
-        return @results.to_json
-      else
-        "Unaccepted format. Please use .json or .pdf"
-      end
+      
       #response from -Header "application/<whatever content-type>"
       respond_to do |f|
         f.on('text/html'){
@@ -162,7 +116,7 @@ class NistApp < Sinatra::Base
           return @results.each.to_json
 
         }
-      end
+end
     else
       erb :search
     end
