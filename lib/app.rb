@@ -8,6 +8,7 @@ require 'json/ext'
 require 'active_support'
 require 'active_support/core_ext'
 require "sinatra/base"
+require 'parseconfig'
 require_relative './pdfgeneration'
 
 
@@ -27,6 +28,20 @@ class NistApp < Sinatra::Base
 
 
   helpers do
+  
+    def search_enabled
+        file = '/etc/mongod.conf'
+        config = ParseConfig.new(file)
+            if config['setParameter'] == "textSearchEnabled=true"
+                return true
+                puts "Mongo TextSearching successfully enabled."
+            else
+            return false
+               puts "Please enable textSearching feature in mongo. Add 'setParameter = textSearchEnabled=true' to /etc/mongod.conf"
+            end
+     end
+  
+  
     # a helper method to turn a string ID
     # representation into a BSON::ObjectId
   
@@ -99,7 +114,9 @@ class NistApp < Sinatra::Base
   #Renders results from search form. Has to be handled seperately, else it wont render form(troubleshooting)
   #Responds to web int or curl with requested format (text/html default)
   get_or_post '/search.?:format?:q?:limit?' do
-    if not params[:q] =~ regex
+  if search_enabled == true
+    if params[:q]
+        if not params[:q] =~ regex
         if params[:format] == 'json'
             content_type :json
         elsif params[:format] == 'pdf'
@@ -137,6 +154,12 @@ class NistApp < Sinatra::Base
        end
     else
     halt 406, "Unaccepted character #{params[:q]}"
+    end
+    else
+    erb :search
+    end
+    else
+    erb :EnableTextSearch
     end
   end
   
