@@ -39,16 +39,12 @@ describe "Nist Application" do
   end
   
   describe "Return all Vulnerabilities" do
-    it "should display all vulnerabilities" do
-      get '/vulnerabilities'
-      last_response.status.should == 200
-      last_response.body.should == File.read(disAll)
-    end
-    
-    it "should redirect to /vulnerabilties if /vulnerabilties/ entered" do
-      get '/vulnerabilities/'
-      last_response.status.should == 302
-    end
+  #Being moved to functional test
+   # it "should display all vulnerabilities" do
+    #  get '/vulnerabilities'
+     # last_response.status.should == 200
+      #last_response.body.should == File.read(disAll)
+    #end
   
     it "should return all vulnerabilities as JSON on the /vulnerabilties.json interface" do
       get '/vulnerabilities.json'
@@ -135,14 +131,14 @@ describe "Nist Application" do
     
     it "should raise error if unaccepted content enter" do
       get '/vulnerabilities.xml'
-      last_response.status.should == 404
-      last_response.body.should == "page not found"
+      last_response.status.should == 200
+      last_response.body.should == "Invalid Format. Use either json or pdf."
     end
     
     it "should raise error if unaccepted character entered" do
-      get '/search?q=linux+OR+1=1,---'
-      last_response.status.should == 200
-      last_response.body.should == "Unaccepted character entered. Please enter valid characters."
+      get '/search?', :q => '^'
+      last_response.status.should == 406
+      last_response.body.should == "Unaccepted character ^"
     end
   end
   

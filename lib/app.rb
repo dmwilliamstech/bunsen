@@ -60,6 +60,8 @@ class NistApp < Sinatra::Base
       end
     end
   end
+  unacceptedChar = "^"
+  regex = /[#{unacceptedChar.gsub(/./){|char| "\\#{char}"}}]/
   
   register Sinatra::RespondWith
   register Sinatra::Prawn
@@ -71,13 +73,17 @@ class NistApp < Sinatra::Base
   end
 
   #Displays all Vuls (with optional params for format) 
-  get '/vulnerabilities' do
-      settings.mongo_db['mostRecent'].find.to_json
-  end
-  
-  
-  get '/vulnerabilities/' do
-    redirect '/vulnerabilities'
+  get '/vulnerabilities.?:format?' do
+
+    if params[:format] == 'json' || params[:format].nil?
+        content_type :json
+        settings.mongo_db['mostRecent'].find.to_json
+    elsif params[:format] == 'pdf'
+        content_type 'application/pdf'
+        settings.mongo_db['mostRecent'].find.to_json
+    else
+        "Invalid Format. Use either json or pdf."
+     end
   end
   
   # find a document by its ID, converts array to json and displays in web interface
@@ -92,8 +98,18 @@ class NistApp < Sinatra::Base
   
   #Renders results from search form. Has to be handled seperately, else it wont render form(troubleshooting)
   #Responds to web int or curl with requested format (text/html default)
-  get_or_post '/search:q?:limit?' do
-    if params[:q]
+  get_or_post '/search.?:format?:q?:limit?' do
+    if not params[:q] =~ regex
+        if params[:format] == 'json'
+            content_type :json
+        elsif params[:format] == 'pdf'
+            content_type 'application/pdf'
+        elsif params[:format].nil?
+            erb :search
+        else
+            "Unaccepted content type. Please use json or pdf."
+        end
+
       #Response from the web int
         if params[:limit].nil?
           @results = search_any(CGI.unescape(params[:q]))['results'].each
@@ -107,18 +123,20 @@ class NistApp < Sinatra::Base
           erb :search 
         }
         f.on('application/pdf'){ 
+          content_type 'application/pdf'
           newPdf = PdfGeneration.new
           pdf = newPdf.create_pdf(@results, params[:q]) 
           return pdf
         }
         f.on('application/json') {
+          content_type :json
           @results = search_any(params[:q])['results'].each
           return @results.each.to_json
 
         }
-end
+       end
     else
-      erb :search
+    halt 406, "Unaccepted character #{params[:q]}"
     end
   end
   
