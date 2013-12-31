@@ -30,16 +30,16 @@ class NistApp < Sinatra::Base
   helpers do
   
     def search_enabled
-        file = '/etc/mongod.conf'
-        config = ParseConfig.new(file)
-            if config['setParameter'] == "textSearchEnabled=true"
-                return true
-                puts "Mongo TextSearching successfully enabled."
-            else
-            return false
-               puts "Please enable textSearching feature in mongo. Add 'setParameter = textSearchEnabled=true' to /etc/mongod.conf"
-            end
-     end
+      file = '/etc/mongod.conf'
+      config = ParseConfig.new(file)
+      if config['setParameter'] == "textSearchEnabled=true"
+        return true
+        puts "Mongo TextSearching successfully enabled."
+      else
+        return false
+        puts "Please enable textSearching feature in mongo. Add 'setParameter = textSearchEnabled=true' to /etc/mongod.conf"
+      end
+    end
   
   
     # a helper method to turn a string ID
@@ -91,20 +91,20 @@ class NistApp < Sinatra::Base
   get '/vulnerabilities.?:format?' do
 
     if params[:format] == 'json' || params[:format].nil?
-        content_type :json
-        settings.mongo_db['mostRecent'].find.to_json
+      content_type :json
+      settings.mongo_db['mostRecent'].find.to_json
     elsif params[:format] == 'pdf'
-        content_type 'application/pdf'
-        settings.mongo_db['mostRecent'].find.to_json
+      content_type 'application/pdf'
+      settings.mongo_db['mostRecent'].find.to_json
     else
-        "Invalid Format. Use either json or pdf."
-     end
+      "Invalid Format. Use either json or pdf."
+    end
   end
   
   # find a document by its ID, converts array to json and displays in web interface
   get '/cve/:id.?:format?' do
     if params[:id]
-        document_by_v_id(params[:id]).to_a.to_json
+      document_by_v_id(params[:id]).to_a.to_json
     else
       "No CVE entered" #or unaccepted format. Please use .json or .pdf"
     end
@@ -114,52 +114,52 @@ class NistApp < Sinatra::Base
   #Renders results from search form. Has to be handled seperately, else it wont render form(troubleshooting)
   #Responds to web int or curl with requested format (text/html default)
   get_or_post '/search.?:format?:q?:limit?' do
-  if search_enabled == true
-    if params[:q]
+    if search_enabled == true
+      if params[:q]
         if not params[:q] =~ regex
-        if params[:format] == 'json'
+          if params[:format] == 'json'
             content_type :json
-        elsif params[:format] == 'pdf'
+          elsif params[:format] == 'pdf'
             content_type 'application/pdf'
-        elsif params[:format].nil?
+          elsif params[:format].nil?
             erb :search
-        else
+          else
             "Unaccepted content type. Please use json or pdf."
-        end
+          end
 
-      #Response from the web int
-        if params[:limit].nil?
-          @results = search_any(CGI.unescape(params[:q]))['results'].each
-        else
-          @results = search_any(CGI.unescape(params[:q]), params[:limit])['results'].each
-        end
+          #Response from the web int
+          if params[:limit].nil?
+            @results = search_any(CGI.unescape(params[:q]))['results'].each
+          else
+            @results = search_any(CGI.unescape(params[:q]), params[:limit])['results'].each
+          end
       
-      #response from -Header "application/<whatever content-type>"
-      respond_to do |f|
-        f.on('text/html'){
-          erb :search 
-        }
-        f.on('application/pdf'){ 
-          content_type 'application/pdf'
-          newPdf = PdfGeneration.new
-          pdf = newPdf.create_pdf(@results, params[:q]) 
-          return pdf
-        }
-        f.on('application/json') {
-          content_type :json
-          @results = search_any(params[:q])['results'].each
-          return @results.each.to_json
+          #response from -Header "application/<whatever content-type>"
+          respond_to do |f|
+            f.on('text/html'){
+              erb :search 
+            }
+            f.on('application/pdf'){ 
+              content_type 'application/pdf'
+              newPdf = PdfGeneration.new
+              pdf = newPdf.create_pdf(@results, params[:q]) 
+              return pdf
+            }
+            f.on('application/json') {
+              content_type :json
+              @results = search_any(params[:q])['results'].each
+              return @results.each.to_json
 
-        }
-       end
+            }
+          end
+        else
+          halt 406, "Unaccepted character #{params[:q]}"
+        end
+      else
+        erb :search
+      end
     else
-    halt 406, "Unaccepted character #{params[:q]}"
-    end
-    else
-    erb :search
-    end
-    else
-    erb :EnableTextSearch
+      erb :EnableTextSearch
     end
   end
   
